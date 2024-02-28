@@ -163,6 +163,21 @@ def generate_plots(
 
     return fig
 
+def write_ai_data(filename,ai_data):
+    import pandas as pd
+    df = pd.DataFrame()
+    df["KernelNames"] = ai_data["kernelNames"]
+    df["Performance"] = ai_data["ai_l1"][1]
+    df["L1_ArithmeticIntensity"] = ai_data["ai_l1"][0]
+    df["L1_Bandwidth"] = df["Performance"] / df["L1_ArithmeticIntensity"]
+    df["L2_ArithmeticIntensity"] = ai_data["ai_l2"][0]
+    df["L2_Bandwidth"] = df["Performance"] / df["L2_ArithmeticIntensity"]
+    df["HBM_ArithmeticIntensity"] = ai_data["ai_hbm"][0]
+    df["HBM_Bandwidth"] = df["Performance"] / df["HBM_ArithmeticIntensity"]
+    df["Performance_Units"] = "GFLOP/s"
+    df["ArithmeticIntensity_Units"] = "FLOP/Byte"
+    df["Bandwidth_Units"] = "GB/s"
+    df.to_csv(filename,index=False)
 
 def get_roofline(
     path_to_dir,
@@ -234,6 +249,8 @@ def get_roofline(
 
     if is_standalone:
         dev_id = "ALL" if dev_id == -1 else str(dev_id)
+
+        write_ai_data(path_to_dir + "/empirRoof_gpu-{}.csv".format(dev_id), ai_data)
 
         fp32_fig.write_image(path_to_dir + "/empirRoof_gpu-{}_fp32.pdf".format(dev_id))
         ml_combo_fig.write_image(
